@@ -1,7 +1,5 @@
 using System.Collections;
-using System.Collections.Generic;
 using Extensions; // NetworkSingleton<T>
-using HarmonyLib;
 using Mirror;     // NetworkServer
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -32,9 +30,10 @@ namespace SandboxTweaks
         }
 
         /// <summary>
-        /// Waits for the ElevatorManager to spawn, then enables every elevator
-        /// button — host-authoritative via RpcEnableAllButtons (reaches non-modded
-        /// clients) plus a local pass so the host is covered regardless of timing.
+        /// Waits for the ElevatorManager to spawn, then unlocks the casino-floor
+        /// buttons — host-authoritative via RpcEnableAllButtons (reaches non-modded
+        /// clients) followed by a local pass that re-gates the boss button behind
+        /// real progression (the RPC lights every button, including the boss).
         /// </summary>
         private IEnumerator ApplyFloorUnlock()
         {
@@ -59,10 +58,9 @@ namespace SandboxTweaks
             if (NetworkServer.active)
                 elevator.RpcEnableAllButtons();
 
-            var buttons = Traverse.Create(elevator).Field("buttonList").GetValue<List<Transform>>();
-            if (buttons != null)
-                foreach (var b in buttons)
-                    if (b != null) b.gameObject.SetActive(true);
+            // RpcEnableAllButtons lights every button incl. the boss; re-gate it.
+            yield return null;
+            Elevator.ApplyButtons(elevator);
 
             Plugin.Log.LogInfo("[SandboxTweaks] floor unlock applied on CasinoScene load");
         }

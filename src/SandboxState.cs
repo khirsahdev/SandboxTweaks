@@ -15,6 +15,12 @@ namespace SandboxTweaks
         public static float OriginalDayDuration = 300f;
         public static bool DayDurationCaptured;
 
+        private static GameSettings _gameSettings;
+
+        /// <summary>Cached GameSettings ScriptableObject (Resources.Load is cached, but this avoids the per-call lookup).</summary>
+        public static GameSettings GameSettings =>
+            _gameSettings != null ? _gameSettings : (_gameSettings = Resources.Load<GameSettings>("GameSettings"));
+
         /// <summary>
         /// Whether the loaded save has the unlock-all-floors tweak. Used by the
         /// ElevatorManager patches, which may run before SaveManager.LoadGame has
@@ -43,7 +49,7 @@ namespace SandboxTweaks
             string saveName = PlayerPrefs.GetString("SelectedSaveName", "");
             Current = Marker.Read(saveName) ?? new SandboxMarker();
 
-            var gs = Resources.Load<GameSettings>("GameSettings");
+            var gs = GameSettings;
             if (gs == null)
             {
                 Plugin.Log.LogWarning("[SandboxTweaks] GameSettings not found — cannot adjust dayDuration");

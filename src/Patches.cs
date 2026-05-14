@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using Extensions; // game's MonoSingleton<T>
 using HarmonyLib;
@@ -156,10 +155,11 @@ namespace SandboxTweaks
             }
         }
 
-        // ── UnlockAllFloors: enable every elevator button, host-authoritative. ──
+        // ── UnlockAllFloors: enable the casino-floor buttons, host-authoritative. ──
         // ElevatorManager.Initialize already sends a ClientRpc, so by the time it
         // runs the object is network-spawned. RpcEnableAllButtons replicates to
-        // every client — modded or not — so only the host needs this mod.
+        // every client — modded or not — so only the host needs this mod. It lights
+        // every button including the boss, so we re-gate the boss button after.
         [HarmonyPatch(typeof(ElevatorManager), "Initialize")]
         internal static class ElevatorManager_UnlockAllFloors
         {
@@ -167,14 +167,15 @@ namespace SandboxTweaks
             private static void Postfix(ElevatorManager __instance)
             {
                 if (!SandboxState.UnlockFloors) return;
-                if (!NetworkServer.active) return; // a ClientRpc must originate on the server/host
-                __instance.RpcEnableAllButtons();
-                Plugin.Log.LogInfo("[SandboxTweaks] unlock-all-floors: RpcEnableAllButtons sent");
+                if (NetworkServer.active)
+                    __instance.RpcEnableAllButtons(); // a ClientRpc must originate on the server/host
+                Elevator.ApplyButtons(__instance);    // re-gate the boss button to real progression
+                Plugin.Log.LogInfo("[SandboxTweaks] unlock-all-floors applied via Initialize");
             }
         }
 
         // ── Host-local fallback: SetButtons runs in ElevatorManager.Start, before
-        //    the RPC above. Make sure the host sees every button regardless. ──
+        //    the RPC above. Apply the same button gating regardless of timing. ──
         [HarmonyPatch(typeof(ElevatorManager), "SetButtons")]
         internal static class ElevatorManager_SetButtonsFallback
         {
@@ -182,10 +183,83 @@ namespace SandboxTweaks
             private static void Postfix(ElevatorManager __instance)
             {
                 if (!SandboxState.UnlockFloors) return;
-                var buttons = Traverse.Create(__instance).Field("buttonList").GetValue<List<Transform>>();
-                if (buttons == null) return;
-                foreach (var b in buttons)
-                    if (b != null) b.gameObject.SetActive(true);
+                Elevator.ApplyButtons(__instance);
+            }
+        }
+
+        // ── Cap the unlock at the last casino floor: the boss stop stays gated
+        //    behind real progression, so unlock-all-floors can't elevator-skip to
+        //    the ending. Enforced host-side on both teleport entry points. ──
+        [HarmonyPatch(typeof(ElevatorManager), "ServerTryTeleportPlayers")]
+        internal static class ElevatorManager_BlockBossShortcut
+        {
+            [HarmonyPrefix]
+            private static bool Prefix(ElevatorManager __instance, int toIndex)
+            {
+                if (!SandboxState.UnlockFloors) return true;
+                int boss = Elevator.BossIndex(__instance);
+                if (boss < 0 || toIndex < boss) return true; // not the boss stop
+                if (Elevator.BossReachedLegitimately(__instance)) return true;
+                Plugin.Log.LogInfo("[SandboxTweaks] blocked elevator shortcut to boss (not progressed)");
+                return false;
+            }
+        }
+        [HarmonyPatch(typeof(ElevatorManager), "ServerForceTeleportPlayers")]
+        internal static class ElevatorManager_BlockBossForce
+        {
+            [HarmonyPrefix]
+            private static bool Prefix(ElevatorManager __instance, int toIndex)
+            {
+                if (!SandboxState.UnlockFloors) return true;
+                int boss = Elevator.BossIndex(__instance);
+                if (boss < 0 || toIndex < boss) return true;
+                return Elevator.BossReachedLegitimately(__instance);
+            }
+        }
+
+        // ── Restore v0.1.0 bet scaling under unlock-all-floors. ──
+        // Vanilla MinBet/MaxBet scale by 2^(casinoLevel - currentFloor - 1). With
+        // floors unlocked but currentFloor at real (low) progression, that term
+        // explodes on high floors. Recompute as if currentFloor were the top
+        // casino floor (what v0.1.0 pinned it to) — bets stay tame, while the real
+        // currentFloor keeps challenge/reroll difficulty on normal progression.
+        [HarmonyPatch(typeof(GameBase), "MinBet", MethodType.Getter)]
+        internal static class GameBase_MinBet
+        {
+            [HarmonyPostfix]
+            private static void Postfix(GameBase __instance, ref long __result)
+            {
+                if (!SandboxState.UnlockFloors) return;
+                var gm = NetworkSingleton<GameManager>.Instance;
+                var gs = SandboxState.GameSettings;
+                if (gm == null || gs == null || gs.floorData == null || gs.floorData.Count == 0) return;
+
+                int effectiveFloor = gs.floorData.Count - 1;
+                double gap = Math.Pow(2.0, __instance.casinoLevel - effectiveFloor - 1);
+                __result = Math.Max(1L, (long)Math.Round(
+                    FathF.RoundByFirstNDigits(
+                        (double)__instance.BaseMinBet * (double)gm.currentQuota * 0.001 * gap, 2),
+                    MidpointRounding.AwayFromZero));
+            }
+        }
+        [HarmonyPatch(typeof(GameBase), "MaxBet", MethodType.Getter)]
+        internal static class GameBase_MaxBet
+        {
+            [HarmonyPostfix]
+            private static void Postfix(GameBase __instance, ref long __result)
+            {
+                if (!SandboxState.UnlockFloors) return;
+                var gm = NetworkSingleton<GameManager>.Instance;
+                var gs = SandboxState.GameSettings;
+                if (gm == null || gs == null || gs.floorData == null || gs.floorData.Count == 0) return;
+
+                int effectiveFloor = gs.floorData.Count - 1;
+                double gap = Math.Pow(2.0, __instance.casinoLevel - effectiveFloor - 1);
+                __result = Math.Max(5L, (long)Math.Round(
+                    FathF.RoundByFirstNDigits(
+                        (double)__instance.BaseMaxBet * (double)gm.currentQuota * 0.001 * gap
+                            * __instance.MaxBetOverrideMultiplier, 2),
+                    MidpointRounding.AwayFromZero));
             }
         }
 

@@ -6,7 +6,7 @@ dialog when creating a save:
 
 | Tweak | What it changes | How |
 |---|---|---|
-| Unlock all floors | elevator buttons only — `currentFloor` left alone | runtime: `ElevatorManager.RpcEnableAllButtons` (host) + `SetButtons` fallback |
+| Unlock all floors | elevator buttons only — `currentFloor` left alone | runtime: `ElevatorManager.RpcEnableAllButtons` (host) + `SetButtons`/`Initialize` postfix; boss stop gated by `ServerTryTeleportPlayers`/`ServerForceTeleportPlayers` prefix; bets via `GameBase.MinBet`/`MaxBet` getter postfix |
 | Big starting money | `money` | written into the new save's `.json` |
 | Long day timer | — | runtime `GameSettings.dayDuration` override on load |
 | Pin quota | `currentQuota` | written into `.json` + `GameSettings.GetQuota` prefix |
@@ -15,8 +15,16 @@ Each save gets a `.tweaks` JSON sidecar recording its choices. Normal saves are 
 
 "Unlock all floors" intentionally does **not** pin `currentFloor` — that would make
 the game treat you as end-game (`GetCurrentFloorData()` reads `currentFloor`, so
-reroll cost, challenge difficulty and prices all scale up). Unlocking just the
-elevator buttons keeps floor-keyed difficulty on normal progression.
+reroll cost and challenge difficulty scale up). Instead it unlocks the elevator
+buttons and handles the two side effects directly:
+
+- **Bets** — the vanilla `MinBet`/`MaxBet` formula scales by
+  `2^(casinoLevel - currentFloor - 1)`, so a high physical floor with low
+  progression explodes bet ranges. The getter postfixes recompute as if
+  `currentFloor` were the top casino floor (the value 0.1.0 pinned), keeping bets
+  tame while real `currentFloor` keeps challenge/reroll difficulty normal.
+- **Boss floor** — the last elevator stop (`BossRoom`) is excluded from the
+  unlock; it only opens once you legitimately progress there.
 
 ## Layout
 

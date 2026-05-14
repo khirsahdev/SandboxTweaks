@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0
+
+- Unlock all floors now caps at the last casino floor. The boss stop stays gated
+  behind real progression, so you can't elevator-skip straight to the ending —
+  enforced host-side on `ServerTryTeleportPlayers` / `ServerForceTeleportPlayers`.
+- Restored the original (0.1.0) bet scaling. With floors unlocked, the real
+  `currentFloor` stays at normal progression (so challenge pool and reroll cost
+  stay normal), but `GameBase.MinBet` / `MaxBet` are recomputed as if you were
+  progressed to the top casino floor — high-floor bets stay tame instead of
+  scaling `2^(floor gap)` above your balance.
+
 ## 0.2.1
 
 - Tweaks now persist across a lost run. A loss calls
