@@ -1,0 +1,12 @@
+# build output
+bin/
+obj/
+dist/
+
+# decompiled game / third-party sources — local lookup only, not redistributed
+reference/
+
+# misc
+*.user
+*.suo
+.vs/

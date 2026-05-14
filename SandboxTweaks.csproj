@@ -1,0 +1,85 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>SandboxTweaks</AssemblyName>
+    <RootNamespace>SandboxTweaks</RootNamespace>
+    <LangVersion>9</LangVersion>
+    <Nullable>disable</Nullable>
+    <Optimize>true</Optimize>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <FileVersion>0.1.0.0</FileVersion>
+    <!-- silence net4x-vs-netstandard reference warnings; game runs on Mono net4.x in-process -->
+    <NoWarn>$(NoWarn);MSB3277;CS0436</NoWarn>
+
+    <!-- !! EDIT these two paths if your install differs !! -->
+    <GameDir>C:\Program Files (x86)\Steam\steamapps\common\Gamble With Your Friends</GameDir>
+    <ProfileDir>C:\Users\Khirsah\AppData\Roaming\Thunderstore Mod Manager\DataFolder\GambleWithYourFriends\profiles\Default</ProfileDir>
+
+    <Managed>$(GameDir)\Gamble With Your Friends_Data\Managed</Managed>
+    <BepCore>$(ProfileDir)\BepInEx\core</BepCore>
+  </PropertyGroup>
+
+  <!-- reference/ holds decompiled game + mod sources for lookup only — never compiled -->
+  <ItemGroup>
+    <Compile Remove="reference/**/*.cs" />
+    <None Include="reference/**/*.cs" />
+  </ItemGroup>
+
+  <!-- BepInEx 5 + HarmonyX -->
+  <ItemGroup>
+    <Reference Include="BepInEx">
+      <HintPath>$(BepCore)\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(BepCore)\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Unity runtime -->
+  <ItemGroup>
+    <Reference Include="UnityEngine">
+      <HintPath>$(Managed)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(Managed)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(Managed)\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(Managed)\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.JSONSerializeModule">
+      <HintPath>$(Managed)\UnityEngine.JSONSerializeModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Game assembly -->
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(Managed)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Deploy straight into the active Thunderstore profile so it loads on next launch -->
+  <Target Name="DeployToProfile" AfterTargets="Build">
+    <MakeDir Directories="$(ProfileDir)\BepInEx\plugins\SandboxTweaks" />
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll"
+          DestinationFolder="$(ProfileDir)\BepInEx\plugins\SandboxTweaks"
+          OverwriteReadOnlyFiles="true" />
+    <Message Text="Deployed SandboxTweaks.dll -> $(ProfileDir)\BepInEx\plugins\SandboxTweaks" Importance="High" />
+  </Target>
+
+</Project>
