@@ -16,7 +16,7 @@ namespace SandboxTweaks
     public class Plugin : BaseUnityPlugin
     {
         public const string Guid = "com.khirsah.sandboxtweaks";
-        public const string Version = "0.3.0";
+        public const string Version = "0.4.0";
 
         internal static ManualLogSource Log;
 
@@ -25,6 +25,7 @@ namespace SandboxTweaks
         internal static ConfigEntry<bool> DefBigMoney;
         internal static ConfigEntry<bool> DefLongDays;
         internal static ConfigEntry<bool> DefPinQuota;
+        internal static ConfigEntry<bool> DefAllGamesFloorOne;
 
         // Default numeric values for the enabled tweaks.
         internal static ConfigEntry<long> StartingMoney;
@@ -45,6 +46,9 @@ namespace SandboxTweaks
                 "Default state of the 'Long day timer' checkbox.");
             DefPinQuota = Config.Bind("Defaults", "PinQuota", true,
                 "Default state of the 'Pin quota' checkbox.");
+            DefAllGamesFloorOne = Config.Bind("Defaults", "AllGamesFloorOne", false,
+                "Default state of the 'All games on floor 1' checkbox. Mutually exclusive " +
+                "with UnlockAllFloors — if both are set true here, UnlockAllFloors wins.");
 
             StartingMoney = Config.Bind("Values", "StartingMoney", 1000000000000L,
                 "Money a save starts with when 'Big starting money' is enabled. Default 1,000,000,000,000 ($1T).");

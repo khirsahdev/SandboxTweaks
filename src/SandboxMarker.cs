@@ -16,12 +16,14 @@ namespace SandboxTweaks
         public bool bigMoney;
         public bool longDays;
         public bool pinQuota;
+        public bool allGamesFloorOne;
 
         public long startingMoney = 1000000000000L;
         public float dayDuration = 3600f;
         public long betQuota = 5000L;
 
-        public bool AnyEnabled => unlockAllFloors || bigMoney || longDays || pinQuota;
+        public bool AnyEnabled =>
+            unlockAllFloors || bigMoney || longDays || pinQuota || allGamesFloorOne;
     }
 
     /// <summary>Reads/writes the ".tweaks" sidecar files in the game's Saves folder.</summary>

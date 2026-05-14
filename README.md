@@ -7,6 +7,7 @@ dialog when creating a save:
 | Tweak | What it changes | How |
 |---|---|---|
 | Unlock all floors | elevator buttons only — `currentFloor` left alone | runtime: `ElevatorManager.RpcEnableAllButtons` (host) + `SetButtons`/`Initialize` postfix; boss stop gated by `ServerTryTeleportPlayers`/`ServerForceTeleportPlayers` prefix; bets via `GameBase.MinBet`/`MaxBet` getter postfix |
+| All games on floor 1 | floor 1's game pool | `StampManager.GetLootTableForFloor` postfix swaps the Floor 1 loot table for a runtime union of floors 1-4. Mutually exclusive with "Unlock all floors" (enforced in the dialog) |
 | Big starting money | `money` | written into the new save's `.json` |
 | Long day timer | — | runtime `GameSettings.dayDuration` override on load |
 | Pin quota | `currentQuota` | written into `.json` + `GameSettings.GetQuota` prefix |

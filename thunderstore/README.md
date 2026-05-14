@@ -12,6 +12,7 @@ that save only; normal saves are never touched.
 | Tweak | Effect |
 |---|---|
 | **Unlock all floors** | Every casino floor is reachable from day one — ride anywhere and play all 17 game types. Challenge pool, reroll cost, shredding prices **and bet ranges** still follow your **normal progression**, not end-game. The boss floor stays locked until you actually progress there. |
+| **All games on floor 1** | Keep normal floor progression, but floor 1's game pool becomes the union of floors 1-4 — any of the 17 game types can spawn on the first floor. **Mutually exclusive with "Unlock all floors"** (they're two ways to get game variety; pick one). |
 | **Big starting money** | Save starts with a configurable pile of cash (default **$1,000,000,000,000**). |
 | **Long day timer** | Each casino day lasts a configurable length (default **3600s / 1 hour**, vanilla is 300s). |
 | **Pin quota** | The quota used by the casino MinBet/MaxBet formulas is pinned to a fixed value, so bet ranges stay stable across days and the lose-state never triggers. |

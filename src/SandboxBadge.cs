@@ -28,6 +28,7 @@ namespace SandboxTweaks
 
             string text = "SANDBOX";
             if (c.unlockAllFloors) text += " · FLOORS";
+            if (c.allGamesFloorOne) text += " · MIXED F1";
             if (c.bigMoney) text += " · $$";
             if (c.longDays) text += " · LONG DAY";
             if (c.pinQuota) text += " · QUOTA";

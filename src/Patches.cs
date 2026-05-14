@@ -1,8 +1,9 @@
 using System;
 using System.IO;
-using Extensions; // game's MonoSingleton<T>
+using Extensions;          // game's MonoSingleton<T>
 using HarmonyLib;
-using Mirror;     // NetworkServer
+using Mirror;              // NetworkServer
+using MoreMountains.Tools; // MMLootTableGameObjectSO
 using UnityEngine;
 
 namespace SandboxTweaks
@@ -308,6 +309,26 @@ namespace SandboxTweaks
                 {
                     Plugin.Log.LogError("[SandboxTweaks] re-apply after reset failed: " + e);
                 }
+            }
+        }
+
+        // ── All games on floor 1. ──
+        // StampManager.GetLootTableForFloor returns the per-floor game pool.
+        // When the tweak is on, swap the Floor 1 table for a runtime union of
+        // floors 1-4 so any game type can spawn there. Recognised by SO identity
+        // so there is no floor-index guessing. NextCasinoPredicter loads tables
+        // via Resources.Load directly, so challenge filtering stays floor-1 normal.
+        [HarmonyPatch(typeof(StampManager), "GetLootTableForFloor")]
+        internal static class StampManager_MixedFirstFloor
+        {
+            [HarmonyPostfix]
+            private static void Postfix(ref MMLootTableGameObjectSO __result)
+            {
+                if (!SandboxState.MixedFirstFloor) return;
+                if (__result == null || __result != LootPool.Floor1Table) return;
+
+                var combined = LootPool.Combined;
+                if (combined != null) __result = combined;
             }
         }
     }

@@ -23,7 +23,7 @@ namespace SandboxTweaks
         private LocalSaveManager _manager;
 
         // Working copy of the toggles + value fields.
-        private bool _floors, _money, _days, _quota;
+        private bool _floors, _money, _days, _quota, _mixed;
         private string _moneyStr, _daysStr, _quotaStr;
 
         private GUIStyle _dimStyle;
@@ -39,6 +39,8 @@ namespace SandboxTweaks
             _money = Plugin.DefBigMoney.Value;
             _days = Plugin.DefLongDays.Value;
             _quota = Plugin.DefPinQuota.Value;
+            _mixed = Plugin.DefAllGamesFloorOne.Value;
+            if (_floors && _mixed) _mixed = false; // mutually exclusive — UnlockAllFloors wins
 
             _moneyStr = Plugin.StartingMoney.Value.ToString(CultureInfo.InvariantCulture);
             _daysStr = Plugin.DayDurationSeconds.Value.ToString("0", CultureInfo.InvariantCulture);
@@ -67,7 +69,16 @@ namespace SandboxTweaks
             GUILayout.Label("Pick which tweaks to bake into this save.\nLeave them all off for a normal save.");
             GUILayout.Space(6);
 
+            // Unlock-all-floors and all-games-on-floor-1 are mutually exclusive:
+            // checking one clears the other.
+            bool prevFloors = _floors;
             _floors = GUILayout.Toggle(_floors, "  Unlock all floors");
+
+            bool prevMixed = _mixed;
+            _mixed = GUILayout.Toggle(_mixed, "  All games on floor 1");
+
+            if (_floors && !prevFloors) _mixed = false;
+            if (_mixed && !prevMixed) _floors = false;
 
             _money = GUILayout.Toggle(_money, "  Big starting money");
             ValueRow("      amount  $", ref _moneyStr, _money);
@@ -107,6 +118,7 @@ namespace SandboxTweaks
                 bigMoney = _money,
                 longDays = _days,
                 pinQuota = _quota,
+                allGamesFloorOne = _mixed,
             };
 
             if (!long.TryParse(_moneyStr, NumberStyles.Integer, CultureInfo.InvariantCulture, out marker.startingMoney)

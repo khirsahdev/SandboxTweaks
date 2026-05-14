@@ -26,17 +26,27 @@ namespace SandboxTweaks
         /// ElevatorManager patches, which may run before SaveManager.LoadGame has
         /// refreshed <see cref="Current"/> — so fall back to reading the marker.
         /// </summary>
-        public static bool UnlockFloors
-        {
-            get
-            {
-                if (Current != null && Current.AnyEnabled)
-                    return Current.unlockAllFloors;
+        public static bool UnlockFloors => Feature(m => m.unlockAllFloors);
 
-                var marker = Marker.Read(PlayerPrefs.GetString("SelectedSaveName", ""));
-                if (marker != null) Current = marker;
-                return Current != null && Current.unlockAllFloors;
-            }
+        /// <summary>
+        /// Whether the loaded save has the all-games-on-floor-1 tweak. Mutually
+        /// exclusive with <see cref="UnlockFloors"/> (enforced by the dialog).
+        /// </summary>
+        public static bool MixedFirstFloor => Feature(m => m.allGamesFloorOne);
+
+        /// <summary>
+        /// Reads a feature flag off the active save's marker. The patches that use
+        /// these can run before SaveManager.LoadGame has refreshed <see cref="Current"/>,
+        /// so fall back to reading the marker file directly.
+        /// </summary>
+        private static bool Feature(System.Func<SandboxMarker, bool> selector)
+        {
+            if (Current != null && Current.AnyEnabled)
+                return selector(Current);
+
+            var marker = Marker.Read(PlayerPrefs.GetString("SelectedSaveName", ""));
+            if (marker != null) Current = marker;
+            return Current != null && selector(Current);
         }
 
         /// <summary>

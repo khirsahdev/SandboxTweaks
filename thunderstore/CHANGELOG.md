@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.4.0
+
+- New tweak: **All games on floor 1**. Floor 1's game pool becomes the
+  de-duplicated union of floors 1-4, so any of the 17 game types can spawn on
+  the first floor while floor progression, challenges and bets stay normal.
+- Implemented as a `StampManager.GetLootTableForFloor` postfix that swaps in a
+  runtime copy of the Floor 1 loot table — original tables and the challenge
+  predictor are untouched.
+- **All games on floor 1** and **Unlock all floors** are mutually exclusive in
+  the new-save dialog — checking one clears the other.
+
 ## 0.3.0
 
 - Unlock all floors now caps at the last casino floor. The boss stop stays gated
