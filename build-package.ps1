@@ -22,6 +22,7 @@ Copy-Item "$root\thunderstore\manifest.json"  "$stage\manifest.json"
 Copy-Item "$root\thunderstore\icon.png"       "$stage\icon.png"
 Copy-Item "$root\thunderstore\README.md"      "$stage\README.md"
 Copy-Item "$root\thunderstore\CHANGELOG.md"   "$stage\CHANGELOG.md"
+Copy-Item "$root\LICENSE"                     "$stage\LICENSE"
 Copy-Item "$root\bin\Release\SandboxTweaks.dll" "$plugDir\SandboxTweaks.dll"
 
 # 4. zip it

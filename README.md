@@ -54,3 +54,14 @@ ready to upload to Thunderstore.
 - The game folder has no `BepInEx/core` — BepInEx is supplied by the TMM profile;
   the game must be launched through Thunderstore Mod Manager (or `verify-load.ps1`).
 - Conflicts with **SandboxMode** (both hook the new-save flow). Disable one.
+
+## Credits & license
+
+Sandbox mechanics are **derived from `SaltedByte`'s [SandboxMode](https://github.com/SaltedByte/sandboxmode)**,
+which is MIT-licensed. SandboxTweaks studies those mechanics from decompilation,
+reimplements them in original code, and splits them into independent per-save
+toggles. The decompiled game/third-party sources under `reference/` are kept
+local only (`.gitignore`d) and never redistributed.
+
+Released under the **MIT License** — see [`LICENSE`](LICENSE), which carries both
+SaltedByte's original copyright and the modification copyright.

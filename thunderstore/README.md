@@ -52,9 +52,13 @@ launch once to generate `BepInEx/config/`, then drop `SandboxTweaks.dll` into
 - Do not run this alongside **SandboxMode** — both hook the new-save flow and will
   fight over it. Sandbox Tweaks is a superset; pick one.
 
-## Credits
+## Credits & license
 
-Mechanics derived from `saltedbyte`'s **SandboxMode**, split into independent
+Sandbox mechanics are derived from **SandboxMode** by `SaltedByte`
+([repo](https://github.com/SaltedByte/sandboxmode)), used under the **MIT
+License** — reimplemented here in original code and split into independent
 per-save toggles. Built on BepInEx 5 and HarmonyX.
+
+SandboxTweaks is released under the MIT License; see the bundled `LICENSE`.
 
 *Built with AI assistance (Claude).*

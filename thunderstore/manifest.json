@@ -1,7 +1,7 @@
 {
     "name": "SandboxTweaks",
     "version_number": "0.2.0",
-    "website_url": "",
+    "website_url": "https://github.com/khirsahdev/SandboxTweaks",
     "description": "Per-save sandbox tweaks picked from a checkbox dialog: unlock all floors, big starting money, long day timer, pinned quota. Toggle each when creating a save; normal saves stay untouched.",
     "dependencies": [
         "BepInEx-BepInExPack-5.4.2305"
