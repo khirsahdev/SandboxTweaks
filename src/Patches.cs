@@ -218,12 +218,14 @@ namespace SandboxTweaks
             }
         }
 
-        // ── Restore v0.1.0 bet scaling under unlock-all-floors. ──
-        // Vanilla MinBet/MaxBet scale by 2^(casinoLevel - currentFloor - 1). With
-        // floors unlocked but currentFloor at real (low) progression, that term
-        // explodes on high floors. Recompute as if currentFloor were the top
-        // casino floor (what v0.1.0 pinned it to) — bets stay tame, while the real
-        // currentFloor keeps challenge/reroll difficulty on normal progression.
+        // ── Scale bets by real progression under unlock-all-floors. ──
+        // Vanilla MinBet/MaxBet scale by 2^(casinoLevel - currentFloor - 1), where
+        // casinoLevel is the *physical* floor of the game. With floors unlocked you
+        // can stand on a floor-4 game (high baseMinBet) at low progression, so the
+        // bet explodes far past your quota. We swap casinoLevel for currentFloor:
+        // the gap term is driven by *your* progression, not the floor you walked
+        // to. Floor-4 games are cheap early and grow to vanilla pricing as you
+        // climb; at full progression the term is 2^-1 = 0.5, exactly vanilla.
         [HarmonyPatch(typeof(GameBase), "MinBet", MethodType.Getter)]
         internal static class GameBase_MinBet
         {
@@ -235,8 +237,8 @@ namespace SandboxTweaks
                 var gs = SandboxState.GameSettings;
                 if (gm == null || gs == null || gs.floorData == null || gs.floorData.Count == 0) return;
 
-                int effectiveFloor = gs.floorData.Count - 1;
-                double gap = Math.Pow(2.0, __instance.casinoLevel - effectiveFloor - 1);
+                int topFloor = gs.floorData.Count - 1;
+                double gap = Math.Pow(2.0, gm.currentFloor - topFloor - 1);
                 __result = Math.Max(1L, (long)Math.Round(
                     FathF.RoundByFirstNDigits(
                         (double)__instance.BaseMinBet * (double)gm.currentQuota * 0.001 * gap, 2),
@@ -254,8 +256,8 @@ namespace SandboxTweaks
                 var gs = SandboxState.GameSettings;
                 if (gm == null || gs == null || gs.floorData == null || gs.floorData.Count == 0) return;
 
-                int effectiveFloor = gs.floorData.Count - 1;
-                double gap = Math.Pow(2.0, __instance.casinoLevel - effectiveFloor - 1);
+                int topFloor = gs.floorData.Count - 1;
+                double gap = Math.Pow(2.0, gm.currentFloor - topFloor - 1);
                 __result = Math.Max(5L, (long)Math.Round(
                     FathF.RoundByFirstNDigits(
                         (double)__instance.BaseMaxBet * (double)gm.currentQuota * 0.001 * gap

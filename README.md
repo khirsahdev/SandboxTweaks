@@ -20,10 +20,14 @@ reroll cost and challenge difficulty scale up). Instead it unlocks the elevator
 buttons and handles the two side effects directly:
 
 - **Bets** — the vanilla `MinBet`/`MaxBet` formula scales by
-  `2^(casinoLevel - currentFloor - 1)`, so a high physical floor with low
-  progression explodes bet ranges. The getter postfixes recompute as if
-  `currentFloor` were the top casino floor (the value 0.1.0 pinned), keeping bets
-  tame while real `currentFloor` keeps challenge/reroll difficulty normal.
+  `2^(casinoLevel - currentFloor - 1)`, where `casinoLevel` is the *physical*
+  floor of the game. With floors unlocked you can stand on a floor-4 game (high
+  baked-in `baseMinBet`) at low progression, so bets explode past your quota. The
+  getter postfixes swap `casinoLevel` for `currentFloor`, so the gap term is
+  driven by *your* progression: floor-4 games are cheap early and grow to vanilla
+  pricing as you climb (at full progression the term is `2^-1 = 0.5`, exactly
+  vanilla). Real `currentFloor` is left alone, so challenge/reroll difficulty
+  stays normal.
 - **Boss floor** — the last elevator stop (`BossRoom`) is excluded from the
   unlock; it only opens once you legitimately progress there.
 

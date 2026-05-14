@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.1
+
+- Unlock-all-floors bet scaling now follows your real progression instead of the
+  physical floor. The `MinBet`/`MaxBet` gap term swaps `casinoLevel` for
+  `currentFloor`: a floor-4 game (high base bet) is cheap at low progression and
+  grows to vanilla pricing as you climb. Fixes floor-4 minimum bets sitting far
+  above your quota when visited early.
+
 ## 0.4.0
 
 - New tweak: **All games on floor 1**. Floor 1's game pool becomes the
