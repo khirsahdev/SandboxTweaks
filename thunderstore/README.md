@@ -11,7 +11,7 @@ that save only; normal saves are never touched.
 
 | Tweak | Effect |
 |---|---|
-| **Unlock all floors** | Save starts on the top casino floor — every elevator button works from day one, and you never lose a floor. |
+| **Unlock all floors** | Every elevator button works from day one — ride to any floor freely. Floor-keyed difficulty (challenge pool, reroll cost, shredding prices) still follows your **normal progression** — it does not jump to end-game. |
 | **Big starting money** | Save starts with a configurable pile of cash (default **$1,000,000,000,000**). |
 | **Long day timer** | Each casino day lasts a configurable length (default **3600s / 1 hour**, vanilla is 300s). |
 | **Pin quota** | The quota used by the casino MinBet/MaxBet formulas is pinned to a fixed value, so bet ranges stay stable across days and the lose-state never triggers. |

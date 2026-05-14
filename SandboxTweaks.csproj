@@ -10,8 +10,8 @@
     <DebugType>none</DebugType>
     <DebugSymbols>false</DebugSymbols>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <AssemblyVersion>0.1.0.0</AssemblyVersion>
-    <FileVersion>0.1.0.0</FileVersion>
+    <AssemblyVersion>0.2.0.0</AssemblyVersion>
+    <FileVersion>0.2.0.0</FileVersion>
     <!-- silence net4x-vs-netstandard reference warnings; game runs on Mono net4.x in-process -->
     <NoWarn>$(NoWarn);MSB3277;CS0436</NoWarn>
 
@@ -65,10 +65,14 @@
     </Reference>
   </ItemGroup>
 
-  <!-- Game assembly -->
+  <!-- Game assembly + Mirror networking -->
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
       <HintPath>$(Managed)\Assembly-CSharp.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Mirror">
+      <HintPath>$(Managed)\Mirror.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

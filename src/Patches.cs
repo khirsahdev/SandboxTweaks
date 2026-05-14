@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Extensions; // game's MonoSingleton<T>
 using HarmonyLib;
+using Mirror;     // NetworkServer
 using UnityEngine;
 
 namespace SandboxTweaks
@@ -86,32 +88,35 @@ namespace SandboxTweaks
                         return;
                     }
 
-                    if (pending.unlockAllFloors)
-                    {
-                        // currentFloor = top floor → ElevatorManager.SetButtons enables every
-                        // elevator button (it activates buttons up to currentFloor + 1).
-                        var gs = Resources.Load<GameSettings>("GameSettings");
-                        int topFloor = (gs != null && gs.floorData != null && gs.floorData.Count > 0)
-                            ? gs.floorData.Count - 1
-                            : 4;
-                        data.currentFloor = topFloor;
-                        // Never advance/lose a floor: the next-floor quota gate is unreachable.
-                        data.requiredQuotaToNextFloor = long.MaxValue;
-                    }
+                    bool dataChanged = false;
+
+                    // NOTE: unlockAllFloors deliberately does NOT touch save data.
+                    // Pinning currentFloor makes the game treat you as end-game —
+                    // GetCurrentFloorData() reads GameManager.currentFloor, so reroll
+                    // cost, challenge difficulty and shredding prices all scale up.
+                    // Floors are instead unlocked at runtime via ElevatorManager
+                    // (see ElevatorManager_UnlockAllFloors below).
 
                     if (pending.bigMoney)
+                    {
                         data.money = pending.startingMoney;
+                        dataChanged = true;
+                    }
 
                     if (pending.pinQuota)
                     {
                         data.currentQuota = pending.betQuota;
                         data.successfulQuota = 0;
+                        dataChanged = true;
                     }
 
-                    File.WriteAllText(path, JsonUtility.ToJson(data, true));
-                    // The game also caches the freshly-created save in PlayerPrefs.
-                    PlayerPrefs.SetString("SelectedSaveData", JsonUtility.ToJson(data));
-                    PlayerPrefs.Save();
+                    if (dataChanged)
+                    {
+                        File.WriteAllText(path, JsonUtility.ToJson(data, true));
+                        // The game also caches the freshly-created save in PlayerPrefs.
+                        PlayerPrefs.SetString("SelectedSaveData", JsonUtility.ToJson(data));
+                        PlayerPrefs.Save();
+                    }
 
                     Marker.Write(saveName, pending);
                     Plugin.Log.LogInfo("[SandboxTweaks] save '" + saveName + "' created — floors=" +
@@ -148,6 +153,39 @@ namespace SandboxTweaks
 
                 ToggleDialog.Instance.Open(__instance, manager);
                 return false; // suppress the vanilla "create save immediately" behaviour
+            }
+        }
+
+        // ── UnlockAllFloors: enable every elevator button, host-authoritative. ──
+        // ElevatorManager.Initialize already sends a ClientRpc, so by the time it
+        // runs the object is network-spawned. RpcEnableAllButtons replicates to
+        // every client — modded or not — so only the host needs this mod.
+        [HarmonyPatch(typeof(ElevatorManager), "Initialize")]
+        internal static class ElevatorManager_UnlockAllFloors
+        {
+            [HarmonyPostfix]
+            private static void Postfix(ElevatorManager __instance)
+            {
+                if (!SandboxState.UnlockFloors) return;
+                if (!NetworkServer.active) return; // a ClientRpc must originate on the server/host
+                __instance.RpcEnableAllButtons();
+                Plugin.Log.LogInfo("[SandboxTweaks] unlock-all-floors: RpcEnableAllButtons sent");
+            }
+        }
+
+        // ── Host-local fallback: SetButtons runs in ElevatorManager.Start, before
+        //    the RPC above. Make sure the host sees every button regardless. ──
+        [HarmonyPatch(typeof(ElevatorManager), "SetButtons")]
+        internal static class ElevatorManager_SetButtonsFallback
+        {
+            [HarmonyPostfix]
+            private static void Postfix(ElevatorManager __instance)
+            {
+                if (!SandboxState.UnlockFloors) return;
+                var buttons = Traverse.Create(__instance).Field("buttonList").GetValue<List<Transform>>();
+                if (buttons == null) return;
+                foreach (var b in buttons)
+                    if (b != null) b.gameObject.SetActive(true);
             }
         }
     }

@@ -16,6 +16,24 @@ namespace SandboxTweaks
         public static bool DayDurationCaptured;
 
         /// <summary>
+        /// Whether the loaded save has the unlock-all-floors tweak. Used by the
+        /// ElevatorManager patches, which may run before SaveManager.LoadGame has
+        /// refreshed <see cref="Current"/> — so fall back to reading the marker.
+        /// </summary>
+        public static bool UnlockFloors
+        {
+            get
+            {
+                if (Current != null && Current.AnyEnabled)
+                    return Current.unlockAllFloors;
+
+                var marker = Marker.Read(PlayerPrefs.GetString("SelectedSaveName", ""));
+                if (marker != null) Current = marker;
+                return Current != null && Current.unlockAllFloors;
+            }
+        }
+
+        /// <summary>
         /// Called after SaveManager.LoadGame. Loads the marker for the active save and
         /// applies the runtime-only tweaks (day length). Restores vanilla day length for
         /// normal saves so a sandbox save never leaks its settings into another save.

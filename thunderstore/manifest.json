@@ -1,6 +1,6 @@
 {
     "name": "SandboxTweaks",
-    "version_number": "0.1.0",
+    "version_number": "0.2.0",
     "website_url": "",
     "description": "Per-save sandbox tweaks picked from a checkbox dialog: unlock all floors, big starting money, long day timer, pinned quota. Toggle each when creating a save; normal saves stay untouched.",
     "dependencies": [

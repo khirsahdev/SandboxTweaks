@@ -4,14 +4,19 @@ BepInEx 5 mod for **Gamble With Your Friends**. Splits `saltedbyte`'s all-or-not
 **SandboxMode** into four independent per-save tweaks the host picks from a checkbox
 dialog when creating a save:
 
-| Tweak | Save field(s) it changes | How |
+| Tweak | What it changes | How |
 |---|---|---|
-| Unlock all floors | `currentFloor` → top, `requiredQuotaToNextFloor` → MAX | written into the new save's `.json` |
+| Unlock all floors | elevator buttons only — `currentFloor` left alone | runtime: `ElevatorManager.RpcEnableAllButtons` (host) + `SetButtons` fallback |
 | Big starting money | `money` | written into the new save's `.json` |
 | Long day timer | — | runtime `GameSettings.dayDuration` override on load |
 | Pin quota | `currentQuota` | written into `.json` + `GameSettings.GetQuota` prefix |
 
 Each save gets a `.tweaks` JSON sidecar recording its choices. Normal saves are untouched.
+
+"Unlock all floors" intentionally does **not** pin `currentFloor` — that would make
+the game treat you as end-game (`GetCurrentFloorData()` reads `currentFloor`, so
+reroll cost, challenge difficulty and prices all scale up). Unlocking just the
+elevator buttons keeps floor-keyed difficulty on normal progression.
 
 ## Layout
 
