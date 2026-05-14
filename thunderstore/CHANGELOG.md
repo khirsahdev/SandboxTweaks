@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.2
+
+- The progression-based bet scaling now also applies to **All games on floor 1**.
+  High-stakes games imported onto floor 1 carry their large baked-in base bets;
+  they're now scaled by your real progression like the unlock-all-floors case,
+  instead of using the raw vanilla amount.
+
 ## 0.4.1
 
 - Unlock-all-floors bet scaling now follows your real progression instead of the

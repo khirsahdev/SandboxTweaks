@@ -218,21 +218,22 @@ namespace SandboxTweaks
             }
         }
 
-        // ── Scale bets by real progression under unlock-all-floors. ──
+        // ── Scale bets by real progression. ──
         // Vanilla MinBet/MaxBet scale by 2^(casinoLevel - currentFloor - 1), where
-        // casinoLevel is the *physical* floor of the game. With floors unlocked you
-        // can stand on a floor-4 game (high baseMinBet) at low progression, so the
-        // bet explodes far past your quota. We swap casinoLevel for currentFloor:
-        // the gap term is driven by *your* progression, not the floor you walked
-        // to. Floor-4 games are cheap early and grow to vanilla pricing as you
-        // climb; at full progression the term is 2^-1 = 0.5, exactly vanilla.
+        // casinoLevel is the *physical* floor of the game. Both unlock-all-floors
+        // (stand on a floor-4 game at low progression) and all-games-on-floor-1
+        // (a high-baseMinBet game imported onto floor 1) put expensive games in
+        // front of you before your quota can support them. We swap casinoLevel for
+        // currentFloor: the gap term is driven by *your* progression. Such games
+        // are cheap early and grow to vanilla pricing as you climb; at full
+        // progression the term is 2^-1 = 0.5, exactly vanilla.
         [HarmonyPatch(typeof(GameBase), "MinBet", MethodType.Getter)]
         internal static class GameBase_MinBet
         {
             [HarmonyPostfix]
             private static void Postfix(GameBase __instance, ref long __result)
             {
-                if (!SandboxState.UnlockFloors) return;
+                if (!SandboxState.UnlockFloors && !SandboxState.MixedFirstFloor) return;
                 var gm = NetworkSingleton<GameManager>.Instance;
                 var gs = SandboxState.GameSettings;
                 if (gm == null || gs == null || gs.floorData == null || gs.floorData.Count == 0) return;
@@ -251,7 +252,7 @@ namespace SandboxTweaks
             [HarmonyPostfix]
             private static void Postfix(GameBase __instance, ref long __result)
             {
-                if (!SandboxState.UnlockFloors) return;
+                if (!SandboxState.UnlockFloors && !SandboxState.MixedFirstFloor) return;
                 var gm = NetworkSingleton<GameManager>.Instance;
                 var gs = SandboxState.GameSettings;
                 if (gm == null || gs == null || gs.floorData == null || gs.floorData.Count == 0) return;
