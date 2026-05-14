@@ -188,5 +188,53 @@ namespace SandboxTweaks
                     if (b != null) b.gameObject.SetActive(true);
             }
         }
+
+        // ── Persist tweaks across a lost run. ──
+        // On a loss the game calls SaveManager.ResetCurrentSaveToDefaults, which
+        // rebuilds currentSaveData to vanilla values (money/quota wiped). Re-bake
+        // the per-save tweaks into the reset data so they survive. (Floors are
+        // runtime-only now, handled by SandboxRuntime on scene load.)
+        [HarmonyPatch(typeof(SaveManager), "ResetCurrentSaveToDefaults")]
+        internal static class SaveManager_ReapplyAfterReset
+        {
+            [HarmonyPostfix]
+            private static void Postfix(SaveManager __instance)
+            {
+                string saveName = PlayerPrefs.GetString("SelectedSaveName", "");
+                var marker = Marker.Read(saveName);
+                if (marker == null || !marker.AnyEnabled) return;
+                SandboxState.Current = marker;
+
+                try
+                {
+                    var data = Traverse.Create(__instance).Field("currentSaveData").GetValue<SaveData>();
+                    if (data == null) return;
+
+                    bool changed = false;
+                    if (marker.bigMoney)
+                    {
+                        data.money = marker.startingMoney;
+                        changed = true;
+                    }
+                    if (marker.pinQuota)
+                    {
+                        data.currentQuota = marker.betQuota;
+                        data.successfulQuota = 0;
+                        changed = true;
+                    }
+                    if (!changed) return;
+
+                    string path = Path.Combine(Marker.SavesDir, saveName + ".json");
+                    File.WriteAllText(path, JsonUtility.ToJson(data, true));
+                    PlayerPrefs.SetString("SelectedSaveData", JsonUtility.ToJson(data));
+                    PlayerPrefs.Save();
+                    Plugin.Log.LogInfo("[SandboxTweaks] re-applied tweaks after run reset: " + saveName);
+                }
+                catch (Exception e)
+                {
+                    Plugin.Log.LogError("[SandboxTweaks] re-apply after reset failed: " + e);
+                }
+            }
+        }
     }
 }

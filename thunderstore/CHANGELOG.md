@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.1
+
+- Tweaks now persist across a lost run. A loss calls
+  `SaveManager.ResetCurrentSaveToDefaults`, which rebuilds the save to vanilla
+  values — big money and pinned quota were wiped, and the floor unlock did not
+  reliably re-apply.
+- Big money / pinned quota are re-baked into the save by a
+  `ResetCurrentSaveToDefaults` postfix.
+- Floor unlock + day length now re-apply on every `CasinoScene` / `HomeScene`
+  load via a `sceneLoaded` watcher, instead of relying on a single Harmony hook.
+
 ## 0.2.0
 
 - **Unlock all floors** now unlocks the elevator buttons directly

@@ -16,7 +16,7 @@ namespace SandboxTweaks
     public class Plugin : BaseUnityPlugin
     {
         public const string Guid = "com.khirsah.sandboxtweaks";
-        public const string Version = "0.2.0";
+        public const string Version = "0.2.1";
 
         internal static ManualLogSource Log;
 
@@ -57,11 +57,13 @@ namespace SandboxTweaks
             _harmony = new Harmony(Guid);
             _harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-            // Host object for the IMGUI dialog + the on-screen badge.
+            // Host object for the IMGUI dialog, the on-screen badge, and the
+            // scene-load watcher that re-applies tweaks after a lost run.
             var go = new GameObject("SandboxTweaks.UI");
             DontDestroyOnLoad(go);
             go.AddComponent<ToggleDialog>();
             go.AddComponent<SandboxBadge>();
+            go.AddComponent<SandboxRuntime>();
 
             Log.LogInfo("Sandbox Tweaks " + Version + " loaded.");
         }
