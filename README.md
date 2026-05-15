@@ -6,8 +6,8 @@ dialog when creating a save:
 
 | Tweak | What it changes | How |
 |---|---|---|
-| Unlock all floors | elevator buttons only — `currentFloor` left alone | runtime: `ElevatorManager.RpcEnableAllButtons` (host) + `SetButtons`/`Initialize` postfix; boss stop gated by `ServerTryTeleportPlayers`/`ServerForceTeleportPlayers` prefix; bets via `GameBase.MinBet`/`MaxBet` getter postfix |
-| All games on floor 1 | floor 1's game pool + bets | `StampManager.GetLootTableForFloor` postfix swaps the Floor 1 loot table for a runtime union of floors 1-4. Shares the `GameBase.MinBet`/`MaxBet` progression scaling so imported high-stakes games aren't priced past your quota. Mutually exclusive with "Unlock all floors" (enforced in the dialog) |
+| Unlock all floors | elevator buttons only — `currentFloor` left alone | runtime: `ElevatorManager.RpcEnableAllButtons` (host) + `SetButtons`/`Initialize` postfix; boss stop gated by `ServerTryTeleportPlayers`/`ServerForceTeleportPlayers` prefix. Bets are vanilla |
+| All games on floor 1 | floor 1's game pool | `StampManager.GetLootTableForFloor` postfix swaps the Floor 1 loot table for a runtime union of floors 1-4. Bets are vanilla. Mutually exclusive with "Unlock all floors" (enforced in the dialog) |
 | Big starting money | `money` | written into the new save's `.json` |
 | Long day timer | — | runtime `GameSettings.dayDuration` override on load |
 | Pin quota | `currentQuota` | written into `.json` + `GameSettings.GetQuota` prefix |
@@ -17,17 +17,12 @@ Each save gets a `.tweaks` JSON sidecar recording its choices. Normal saves are 
 "Unlock all floors" intentionally does **not** pin `currentFloor` — that would make
 the game treat you as end-game (`GetCurrentFloorData()` reads `currentFloor`, so
 reroll cost and challenge difficulty scale up). Instead it unlocks the elevator
-buttons and handles the two side effects directly:
+buttons and leaves the rest to vanilla:
 
-- **Bets** — the vanilla `MinBet`/`MaxBet` formula scales by
-  `2^(casinoLevel - currentFloor - 1)`, where `casinoLevel` is the *physical*
-  floor of the game. With floors unlocked you can stand on a floor-4 game (high
-  baked-in `baseMinBet`) at low progression, so bets explode past your quota. The
-  getter postfixes swap `casinoLevel` for `currentFloor`, so the gap term is
-  driven by *your* progression: floor-4 games are cheap early and grow to vanilla
-  pricing as you climb (at full progression the term is `2^-1 = 0.5`, exactly
-  vanilla). Real `currentFloor` is left alone, so challenge/reroll difficulty
-  stays normal.
+- **Bets** — left as vanilla. With floors unlocked, the `MinBet`/`MaxBet` formula
+  `2^(casinoLevel − currentFloor − 1)` still uses the game's physical floor, so
+  visiting a floor-4 game at low progression will price it as vanilla would —
+  i.e. expensive. The mod never overrides bet maths.
 - **Boss floor** — the last elevator stop (`BossRoom`) is excluded from the
   unlock; it only opens once you legitimately progress there.
 

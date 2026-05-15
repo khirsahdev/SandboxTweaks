@@ -218,54 +218,10 @@ namespace SandboxTweaks
             }
         }
 
-        // ── Scale bets by real progression. ──
-        // Vanilla MinBet/MaxBet scale by 2^(casinoLevel - currentFloor - 1), where
-        // casinoLevel is the *physical* floor of the game. Both unlock-all-floors
-        // (stand on a floor-4 game at low progression) and all-games-on-floor-1
-        // (a high-baseMinBet game imported onto floor 1) put expensive games in
-        // front of you before your quota can support them. We swap casinoLevel for
-        // currentFloor: the gap term is driven by *your* progression. Such games
-        // are cheap early and grow to vanilla pricing as you climb; at full
-        // progression the term is 2^-1 = 0.5, exactly vanilla.
-        [HarmonyPatch(typeof(GameBase), "MinBet", MethodType.Getter)]
-        internal static class GameBase_MinBet
-        {
-            [HarmonyPostfix]
-            private static void Postfix(GameBase __instance, ref long __result)
-            {
-                if (!SandboxState.UnlockFloors && !SandboxState.MixedFirstFloor) return;
-                var gm = NetworkSingleton<GameManager>.Instance;
-                var gs = SandboxState.GameSettings;
-                if (gm == null || gs == null || gs.floorData == null || gs.floorData.Count == 0) return;
-
-                int topFloor = gs.floorData.Count - 1;
-                double gap = Math.Pow(2.0, gm.currentFloor - topFloor - 1);
-                __result = Math.Max(1L, (long)Math.Round(
-                    FathF.RoundByFirstNDigits(
-                        (double)__instance.BaseMinBet * (double)gm.currentQuota * 0.001 * gap, 2),
-                    MidpointRounding.AwayFromZero));
-            }
-        }
-        [HarmonyPatch(typeof(GameBase), "MaxBet", MethodType.Getter)]
-        internal static class GameBase_MaxBet
-        {
-            [HarmonyPostfix]
-            private static void Postfix(GameBase __instance, ref long __result)
-            {
-                if (!SandboxState.UnlockFloors && !SandboxState.MixedFirstFloor) return;
-                var gm = NetworkSingleton<GameManager>.Instance;
-                var gs = SandboxState.GameSettings;
-                if (gm == null || gs == null || gs.floorData == null || gs.floorData.Count == 0) return;
-
-                int topFloor = gs.floorData.Count - 1;
-                double gap = Math.Pow(2.0, gm.currentFloor - topFloor - 1);
-                __result = Math.Max(5L, (long)Math.Round(
-                    FathF.RoundByFirstNDigits(
-                        (double)__instance.BaseMaxBet * (double)gm.currentQuota * 0.001 * gap
-                            * __instance.MaxBetOverrideMultiplier, 2),
-                    MidpointRounding.AwayFromZero));
-            }
-        }
+        // Bet formulas (GameBase.MinBet / GameBase.MaxBet) are intentionally left
+        // as vanilla — no custom postfixes. Mod-induced situations (floor-4 game
+        // visited at low progression, high-baseMinBet game imported onto floor 1)
+        // keep the game's own pricing.
 
         // ── Persist tweaks across a lost run. ──
         // On a loss the game calls SaveManager.ResetCurrentSaveToDefaults, which

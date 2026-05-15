@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.3
+
+- Removed the custom MinBet/MaxBet scaling entirely. Bet formulas are now pure
+  vanilla in every mode. A floor-4 game visited at low progression under
+  unlock-all-floors will use the vanilla `2^(casinoLevel - currentFloor - 1)`
+  scaling (i.e. expensive); a high-baseMinBet game imported onto floor 1 under
+  the mixed-pool tweak will use the vanilla floor-1 scaling with its baked-in
+  base bets.
+
 ## 0.4.2
 
 - The progression-based bet scaling now also applies to **All games on floor 1**.
