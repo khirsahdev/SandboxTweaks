@@ -16,7 +16,7 @@ namespace SandboxTweaks
     public class Plugin : BaseUnityPlugin
     {
         public const string Guid = "com.khirsah.sandboxtweaks";
-        public const string Version = "0.4.3";
+        public const string Version = "0.4.4";
 
         internal static ManualLogSource Log;
 

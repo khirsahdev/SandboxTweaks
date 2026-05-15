@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.4.4
+
+- Challenges now match the spawned games under **All games on floor 1**. The
+  challenge booth was pulling from floor-1-only challenges and the floor-1
+  game-type filter, even though floor 1 was spawning floor-2/3/4 games. On the
+  first casino floor the mod now expands both `ChallengeManager.
+  GetChallengesByFloorIndex` and `NextCasinoPredicter.GetAvailableGameTypesForFloor`
+  to the union of floors 1-4, so quests can target any of the games actually
+  present.
+
 ## 0.4.3
 
 - Removed the custom MinBet/MaxBet scaling entirely. Bet formulas are now pure

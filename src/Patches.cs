@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Extensions;          // game's MonoSingleton<T>
 using HarmonyLib;
@@ -271,12 +272,11 @@ namespace SandboxTweaks
             }
         }
 
-        // ── All games on floor 1. ──
+        // ── All games on floor 1: spawn pool. ──
         // StampManager.GetLootTableForFloor returns the per-floor game pool.
         // When the tweak is on, swap the Floor 1 table for a runtime union of
         // floors 1-4 so any game type can spawn there. Recognised by SO identity
-        // so there is no floor-index guessing. NextCasinoPredicter loads tables
-        // via Resources.Load directly, so challenge filtering stays floor-1 normal.
+        // so there is no floor-index guessing.
         [HarmonyPatch(typeof(StampManager), "GetLootTableForFloor")]
         internal static class StampManager_MixedFirstFloor
         {
@@ -288,6 +288,62 @@ namespace SandboxTweaks
 
                 var combined = LootPool.Combined;
                 if (combined != null) __result = combined;
+            }
+        }
+
+        // ── All games on floor 1: keep challenges aligned with the spawned pool. ──
+        // ChallengeBooth filters by GetChallengesByFloorIndex(currentFloor) ∩
+        // GetAvailableGameTypesForFloor(currentFloor+1). Floor 1's mixed pool
+        // can spawn floor-2/3/4 games, so on the first floor (currentFloor 0,
+        // loot index 1) expand both lookups to the union of floors 1-4 — quests
+        // can then target any of the games actually present.
+
+        [HarmonyPatch(typeof(ChallengeManager), "GetChallengesByFloorIndex")]
+        internal static class ChallengeManager_MixedFirstFloor
+        {
+            [HarmonyPostfix]
+            private static void Postfix(ChallengeManager __instance, int floorIndex, ref List<Challenge> __result)
+            {
+                if (!SandboxState.MixedFirstFloor) return;
+                if (floorIndex != 0) return; // first casino floor only
+
+                var all = Traverse.Create(__instance).Field("allChallenges").GetValue<List<Challenge>>();
+                if (all == null) return;
+
+                var union = new List<Challenge>();
+                var seen = new HashSet<Challenge>();
+                if (__result != null)
+                    foreach (var c in __result)
+                        if (c != null && seen.Add(c)) union.Add(c);
+                foreach (var c in all)
+                    if (c != null && c.floorIndex >= 0 && c.floorIndex <= 3 && seen.Add(c))
+                        union.Add(c);
+                __result = union;
+            }
+        }
+
+        [HarmonyPatch(typeof(NextCasinoPredicter), "GetAvailableGameTypesForFloor")]
+        internal static class NextCasinoPredicter_MixedFirstFloor
+        {
+            [HarmonyPostfix]
+            private static void Postfix(int floorIndex, ref HashSet<CasinoGameType> __result)
+            {
+                if (!SandboxState.MixedFirstFloor) return;
+                if (floorIndex != 1) return; // first casino floor's loot index
+                if (__result == null) __result = new HashSet<CasinoGameType>();
+
+                for (int f = 2; f <= 4; f++)
+                {
+                    var table = Resources.Load<MMLootTableGameObjectSO>("FloorLootTables/Floor " + f);
+                    if (table == null || table.LootTable == null || table.LootTable.ObjectsToLoot == null)
+                        continue;
+                    foreach (var entry in table.LootTable.ObjectsToLoot)
+                    {
+                        if (entry == null || entry.Loot == null) continue;
+                        var gb = entry.Loot.GetComponentInChildren<GameBase>(includeInactive: true);
+                        if (gb != null) __result.Add(gb.GameType);
+                    }
+                }
             }
         }
     }
